@@ -14,6 +14,9 @@ import com.shiro.aedessfrs.model.User;
 import com.shiro.aedessfrs.repository.UserRepository;
 import com.shiro.aedessfrs.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.http.parser.Authorization;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -66,11 +69,14 @@ public class AuthService {
         return new AuthResponse(mapper.toDto(user.get()),token);
     }
 
-    public UserResponse getCurrentUser(String token) {
-        if(token.isBlank()) {
-            throw new InvalidHeaderException("No logged in user");
+    public UserResponse getCurrentUser(Authentication token) {
+        token = SecurityContextHolder.getContext().getAuthentication();
+
+        assert token != null;
+        if(!token.isAuthenticated()) {
+            throw new InvalidHeaderException("Unauthenticated User");
         }
-        UUID userId = UUID.fromString(jwtUtils.extractUserId(token));
+        UUID userId = UUID.fromString(jwtUtils.extractUserId(token.getName()));
 
         Optional<User> user = userRepository.findById(userId);
         if(user.isEmpty()) {
