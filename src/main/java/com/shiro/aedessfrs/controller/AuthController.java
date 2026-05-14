@@ -7,13 +7,12 @@ import com.shiro.aedessfrs.dto.response.UserResponse;
 import com.shiro.aedessfrs.dto.request.CreateUseRequest;
 import com.shiro.aedessfrs.service.AuthService;
 import jakarta.validation.Valid;
-import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("api/auth")
+@RequestMapping("/api/auth")
 @RestController
 public class AuthController {
 
@@ -23,6 +22,8 @@ public class AuthController {
         this.authService = authService;
     }
 
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> registerUser(@Valid @RequestBody CreateUseRequest createUseRequest, BindingResult bindingResult) {
         return ResponseEntity.ok().body(authService.registerUser(createUseRequest));
@@ -33,9 +34,10 @@ public class AuthController {
         return ResponseEntity.ok().body(authService.loginUser(loginUserRequest));
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> getCurrentUser(@RequestHeader("Authorization") Authentication authHeader) {
-        return ResponseEntity.ok().body(authService.getCurrentUser(authHeader));
+    public ResponseEntity<UserResponse> getCurrentUser() {
+        return ResponseEntity.ok().body(authService.getCurrentUser());
 
     }
 }

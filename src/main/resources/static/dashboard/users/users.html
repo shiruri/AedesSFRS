@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Users - AEDES</title>
+<script src="../../js/toggles.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/sidebar.css">
+<style>
+:root{--bg:#ffffff;--bg2:#f8f9fa;--bg3:#f0f1f2;--txt:#111111;--txt2:#6b7280;--txt3:#9ca3af;--accent:#111111;--border:#e5e7eb}
+.dark-mode,:root.dark-mode{--bg:#0a0a0a;--bg2:#141414;--bg3:#1f1f1f;--txt:#ffffff;--txt2:#a1a1aa;--txt3:#71717a;--accent:#ffffff;--border:#27272a}
+html{scroll-behavior:smooth;height:100%}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;transition:background .2s ease,color .2s ease}
+.loader{z-index:9999;position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease,visibility .35s ease}
+.loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.loader-spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes f{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem}
+.toolbar-left{display:flex;align-items:center;gap:.5rem}
+.toolbar-left .filter{position:relative}
+.toolbar-left .filter input{padding:.5rem .75rem .5rem 2rem;font-size:.8125rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--txt);width:200px;max-width:100%}
+.toolbar-left .filter input:focus{outline:none;border-color:var(--accent)}
+.toolbar-left .filter svg{position:absolute;left:.6rem;top:50%;transform:translateY(-50%);color:var(--txt3)}
+.btn{padding:.5rem 1rem;border-radius:8px;font-weight:600;font-size:.8125rem;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;border:none;transition:all .2s}
+.btn-primary{background:var(--accent);color:var(--bg)}
+.btn-primary:hover{transform:translateY(-1px)}
+.btn-secondary{background:var(--bg2);color:var(--txt);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--bg3)}
+.btn-danger{background:transparent;color:#ef4444;border:1px solid rgba(239,68,68,0.2)}
+.btn-danger:hover{background:rgba(239,68,68,0.06)}
+.btn-icon{padding:.4rem;border-radius:6px;color:var(--txt2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;background:none;border:none;transition:all .15s}
+.btn-icon:hover{background:var(--bg3);color:var(--txt)}
+.chips{display:flex;gap:.375rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.chip{padding:.3rem .65rem;border-radius:100px;font-size:.75rem;font-weight:500;border:1px solid var(--border);background:var(--bg2);color:var(--txt2);cursor:pointer;transition:all .15s}
+.chip.active,.chip:hover{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.role-badge{display:inline-flex;padding:.15rem .5rem;border-radius:100px;font-size:.6875rem;font-weight:600}
+.role-badge.admin{background:rgba(239,68,68,0.1);color:#ef4444}
+.role-badge.faculty{background:rgba(245,158,11,0.1);color:#f59e0b}
+.role-badge.student{background:rgba(99,102,241,0.1);color:#6366f1}
+.tb{width:100%;border-collapse:collapse}
+.tb th{text-align:left;padding:.75rem 1.25rem;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--txt3);background:var(--bg2);border-bottom:1px solid var(--border)}
+.tb td{padding:.75rem 1.25rem;font-size:.875rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.tb tr:last-child td{border-bottom:none}
+.tb tr:hover td{background:var(--bg2)}
+.tb .actions{display:flex;gap:.25rem}
+.user-cell{display:flex;align-items:center;gap:.75rem}
+.user-cell .name{font-weight:500}
+.user-cell .email{font-size:.75rem;color:var(--txt3)}
+.pages{display:flex;align-items:center;justify-content:center;gap:.375rem;padding:1rem;border-top:1px solid var(--border)}
+.page-btn{padding:.35rem .65rem;border-radius:6px;font-size:.8125rem;font-weight:500;border:1px solid var(--border);background:var(--bg2);color:var(--txt2);cursor:pointer;transition:all .15s;min-width:32px;text-align:center}
+.page-btn.active,.page-btn:hover{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.page-btn:disabled{opacity:.4;cursor:not-allowed}
+.confirm-box{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:1rem;text-align:center;margin-bottom:1rem}
+.confirm-box p{font-size:.875rem;color:var(--txt2)}
+.confirm-box strong{color:var(--txt)}
+@media(max-width:600px){.toolbar{flex-direction:row;flex-wrap:wrap}.toolbar-left{flex:1;min-width:0}.toolbar-left .filter input{width:100%}.toolbar .btn{flex-shrink:0}.tb th,.tb td{padding:.5rem .75rem;font-size:.8125rem}}
+.hdr-user{display:flex;align-items:center;gap:.6rem;padding:.3rem .4rem .3rem .75rem;border-radius:8px;cursor:pointer;text-decoration:none;color:inherit;transition:background .15s}
+.hdr-user:hover{background:var(--bg2)}
+.hdr-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8125rem;text-decoration:none;flex-shrink:0}
+.hdr-name{font-size:.875rem;font-weight:500;color:var(--txt);text-decoration:none}
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;font-size:.8125rem;font-weight:500;margin-bottom:.375rem;color:var(--txt)}
+.form-input{width:100%;padding:.75rem .875rem;font-size:.875rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--txt);transition:all .15s}
+.form-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(17,17,17,0.08)}
+.dark-mode .form-input:focus,.dark-mode .form-select:focus{box-shadow:0 0 0 2px rgba(255,255,255,0.08)}
+.form-input::placeholder{color:var(--txt3)}
+.form-input:disabled{opacity:.6;cursor:not-allowed}
+.form-select{width:100%;padding:.75rem 2.25rem .75rem .875rem;font-size:.875rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--txt);transition:all .15s;appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .75rem center}
+.form-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(17,17,17,0.08)}
+.pw-row{display:flex;gap:.5rem}
+.pw-row .form-input{flex:1}
+.pw-row .btn{flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="loader" id="loader"><div class="loader-spin"></div></div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<button class="menu-toggle-fixed" id="sidebar-toggle">
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<aside class="sidebar" id="sidebar"></aside>
+<div class="main-wrap">
+<div class="header">
+<div class="header-left"></div>
+<div class="header-right">
+<button class="header-btn" id="theme-toggle">
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+</button>
+<a href="../../profile/profile.html" class="hdr-user" id="hdr-user">
+<div class="hdr-avatar" id="hdr-avatar">U</div>
+<span class="hdr-name" id="hdr-name">User</span>
+</a>
+</div>
+</div>
+<div class="main-content">
+<div class="page-hdr"><h1>Users</h1><p>Manage system users</p></div>
+<div>
+<div class="chips">
+<span class="chip active">All</span>
+<span class="chip">Admin</span>
+<span class="chip">Faculty</span>
+<span class="chip">Student</span>
+</div>
+<div class="toolbar">
+<div class="toolbar-left">
+<div class="filter">
+<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+<input type="text" placeholder="Search users...">
+</div>
+</div>
+<button class="btn btn-primary" id="add-student-btn">
+<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+Add Student
+</button>
+</div>
+</div>
+<div class="card an">
+<div class="card-hdr"><h2>All Users</h2><span style="font-size:.8125rem;color:var(--txt3)" id="user-count">3 users</span></div>
+<table class="tb">
+<thead><tr><th>User</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+<tbody id="user-table-body">
+<tr>
+<td><div class="user-cell"><div class="avatar-sm">A</div><div><div class="name">Admin User</div><div class="email">admin@university.edu</div></div></div></td>
+<td><span class="role-badge admin">Admin</span></td>
+<td><span style="font-size:.75rem;color:#22c55e;">Active</span></td>
+<td class="actions">
+<button class="btn-icon edit-user" data-id="1" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+<button class="btn-icon delete-user" data-id="1" data-name="Admin User" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+</td>
+</tr>
+<tr>
+<td><div class="user-cell"><div class="avatar-sm">C</div><div><div class="name">Cruz Faculty</div><div class="email">faculty@university.edu</div></div></div></td>
+<td><span class="role-badge faculty">Faculty</span></td>
+<td><span style="font-size:.75rem;color:#22c55e;">Active</span></td>
+<td class="actions">
+<button class="btn-icon edit-user" data-id="2" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+<button class="btn-icon delete-user" data-id="2" data-name="Cruz Faculty" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+</td>
+</tr>
+<tr>
+<td><div class="user-cell"><div class="avatar-sm">R</div><div><div class="name">Reyes Student</div><div class="email">student@university.edu</div></div></div></td>
+<td><span class="role-badge student">Student</span></td>
+<td><span style="font-size:.75rem;color:#22c55e;">Active</span></td>
+<td class="actions">
+<button class="btn-icon edit-user" data-id="3" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+<button class="btn-icon delete-user" data-id="3" data-name="Reyes Student" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="pages">
+<button class="page-btn" disabled><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+<button class="page-btn active">1</button>
+<button class="page-btn">2</button>
+<button class="page-btn">3</button>
+<button class="page-btn"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Add Student Modal -->
+<div class="a-modal-overlay" id="add-modal">
+<div class="a-modal">
+<div class="a-modal-hdr">
+<h2>Add Student</h2>
+<button class="a-modal-close" data-close="add-modal"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+</div>
+<form id="add-user-form" autocomplete="off">
+<div class="form-group">
+<label for="add-name">Full Name</label>
+<input type="text" id="add-name" class="form-input" placeholder="Enter student name" required>
+</div>
+<div class="form-group">
+<label for="add-email">Email Address</label>
+<input type="email" id="add-email" class="form-input" placeholder="student@university.edu" required>
+</div>
+<div class="form-group">
+<label for="add-role">Role</label>
+<select id="add-role" class="form-select"><option value="STUDENT">Student</option><option value="FACULTY">Faculty</option><option value="ADMIN">Admin</option></select>
+</div>
+<div class="form-group">
+<label for="add-password">Password</label>
+<div class="pw-row">
+<input type="text" id="add-password" class="form-input" placeholder="Auto-generated" disabled>
+<button type="button" class="btn btn-secondary" id="gen-pw-btn">Generate</button>
+</div>
+</div>
+<div class="a-modal-ftr">
+<button type="button" class="btn btn-secondary a-modal-cancel" data-close="add-modal">Cancel</button>
+<button type="submit" class="btn btn-primary">Create User</button>
+</div>
+</form>
+</div>
+</div>
+<!-- Edit User Modal -->
+<div class="a-modal-overlay" id="edit-modal">
+<div class="a-modal">
+<div class="a-modal-hdr">
+<h2>Update User</h2>
+<button class="a-modal-close" data-close="edit-modal"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+</div>
+<form id="edit-user-form" autocomplete="off">
+<input type="hidden" id="edit-id">
+<div class="form-group">
+<label for="edit-name">Full Name</label>
+<input type="text" id="edit-name" class="form-input" required>
+</div>
+<div class="form-group">
+<label for="edit-email">Email Address</label>
+<input type="email" id="edit-email" class="form-input" required>
+</div>
+<div class="form-group">
+<label for="edit-role">Role</label>
+<select id="edit-role" class="form-select"><option value="STUDENT">Student</option><option value="FACULTY">Faculty</option><option value="ADMIN">Admin</option></select>
+</div>
+<div class="a-modal-ftr">
+<button type="button" class="btn btn-secondary a-modal-cancel" data-close="edit-modal">Cancel</button>
+<button type="submit" class="btn btn-primary">Save Changes</button>
+</div>
+</form>
+</div>
+</div>
+<!-- Delete Confirm Modal -->
+<div class="a-modal-overlay" id="delete-modal">
+<div class="a-modal" style="max-width:380px;">
+<div class="a-modal-hdr">
+<h2>Delete User</h2>
+<button class="a-modal-close" data-close="delete-modal"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+</div>
+<div class="confirm-box">
+<p>Are you sure you want to delete <strong id="delete-user-name">this user</strong>? This action cannot be undone.</p>
+</div>
+<div class="a-modal-ftr">
+<button type="button" class="btn btn-secondary a-modal-cancel" data-close="delete-modal">Cancel</button>
+<button type="button" class="btn btn-danger" id="delete-confirm-btn">Delete</button>
+</div>
+</div>
+</div>
+<script src="../../js/api.js"></script>
+<script src="../../js/modal.js"></script>
+<script src="../shared/sidebar.js"></script>
+<script>
+var AppToast = {
+    _show: function(msg, type) {
+        var c = document.getElementById('toast-stack');
+        if (!c) { c = document.createElement('div'); c.id = 'toast-stack'; c.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:99999;display:flex;flex-direction:column;gap:.5rem;max-width:360px'; document.body.appendChild(c); }
+        var t = document.createElement('div');
+        t.style.cssText = 'padding:.75rem 1rem;border-radius:10px;font-size:.875rem;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,0.12);animation:toastIn .3s ease;background:'+(type==='error'?'rgba(239,68,68,0.95)':'rgba(34,197,94,0.95)')+';color:#fff';
+        t.textContent = msg;
+        c.appendChild(t);
+        setTimeout(function(){ t.style.transition='opacity .3s'; t.style.opacity='0'; setTimeout(function(){t.remove()},300); }, 3500);
+    },
+    success: function(m) { this._show(m, 'success'); },
+    error: function(m) { this._show(m, 'error'); }
+};
+if (!document.getElementById('toast-styles')) {
+    var s = document.createElement('style'); s.id = 'toast-styles';
+    s.textContent = '@keyframes toastIn{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:translateX(0)}}';
+    document.head.appendChild(s);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    AedesSidebar.buildSidebar('Users');
+    AedesSidebar.initSidebarToggle();
+    AedesSidebar.populateHeaderUser();
+    setTimeout(function(){document.getElementById('loader').classList.add('hidden');document.querySelectorAll('.page-hdr,.card,.toolbar,.chips').forEach(function(e,i){e.style.animation='f .5s ease forwards';e.style.animationDelay=(i*0.1)+'s';e.style.opacity='0'})},150);
+    // --- Modals ---------------------------------------------------------
+    AedModal.init('add-modal', { openBtnId: 'add-student-btn' });
+    AedModal.init('edit-modal');
+    AedModal.init('delete-modal');
+    var addPw = document.getElementById('add-password');
+    var genPw = document.getElementById('gen-pw-btn');
+    var addForm = document.getElementById('add-user-form');
+    var addName = document.getElementById('add-name');
+    document.getElementById('add-student-btn').addEventListener('click', function() {
+        if (!addPw.value) addPw.value = generatePassword();
+        setTimeout(function() { if (addName) addName.focus(); }, 300);
+    });
+    if (genPw) genPw.addEventListener('click', function() { addPw.value = generatePassword(); });
+    addForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var btn = addForm.querySelector('.btn-primary');
+        var orig = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Creating...';
+        var email = document.getElementById('add-email').value.trim();
+        var role = document.getElementById('add-role').value;
+        try {
+            await API.auth.register(addName.value.trim(), email, addPw.value, role);
+            AedModal.close('add-modal');
+            AppToast.success('User created successfully');
+        } catch (err) {
+            AppToast.error(err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = orig;
+        }
+    });
+    // --- Edit Modal ---------------------------------------------------
+    document.querySelectorAll('.edit-user').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var row = this.closest('tr');
+            var editId = document.getElementById('edit-id');
+            var editName = document.getElementById('edit-name');
+            var editEmail = document.getElementById('edit-email');
+            var editRole = document.getElementById('edit-role');
+            editId.value = this.dataset.id;
+            editName.value = row.querySelector('.name').textContent;
+            editEmail.value = row.querySelector('.email').textContent;
+            var roleText = row.querySelector('.role-badge').textContent.toLowerCase();
+            var roleMap = {admin:'ADMIN',faculty:'FACULTY',student:'STUDENT'};
+            editRole.value = roleMap[roleText] || 'STUDENT';
+            AedModal.open('edit-modal');
+        });
+    });
+    document.getElementById('edit-user-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log('Updated:', {id: document.getElementById('edit-id').value, name: document.getElementById('edit-name').value.trim(), email: document.getElementById('edit-email').value.trim(), role: document.getElementById('edit-role').value});
+        AedModal.close('edit-modal');
+    });
+    // --- Delete Modal -------------------------------------------------
+    var deleteTargetId = null;
+    document.querySelectorAll('.delete-user').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            deleteTargetId = this.dataset.id;
+            document.getElementById('delete-user-name').textContent = this.dataset.name;
+            AedModal.open('delete-modal');
+        });
+    });
+    document.getElementById('delete-confirm-btn').addEventListener('click', function() {
+        console.log('Deleted user ID:', deleteTargetId);
+        AedModal.close('delete-modal');
+    });
+    // --- Password Generator -------------------------------------------
+    function generatePassword() {
+        var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
+        var pw = '';
+        for (var i = 0; i < 12; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
+        return pw;
+    }
+});
+</script>
+</body>
+</html>

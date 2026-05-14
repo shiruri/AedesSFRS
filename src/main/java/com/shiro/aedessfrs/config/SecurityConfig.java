@@ -5,15 +5,18 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -24,9 +27,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
-
+@EnableMethodSecurity
 @Configuration
 public class SecurityConfig {
 
@@ -49,16 +51,14 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/", "/index.html",
                                 "/css/**", "/js/**", "/images/**", "/fonts/**",
-                                "/*.html", "/*.js", "/*.css", "/*.ico", "/*.png",
-                                "/login/**", "/signup/**", "/profile/**",
-                                "/browse/**", "/listing/**",
-                                "/messages/**", "/offers/**", "/rentals/**",
+                                "/*.html", "/*.js", "/*.css", "/*.ico",
+                                "/login/**", "/profile/**",
+                                "/listing/**",
                                 "/error/**", "/favicon.ico","/admin/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/error", "/error/**").permitAll()
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/listings", "/api/listings/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -88,12 +88,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Supports both local dev and Railway prod from one property
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:3000",
                 "http://127.0.0.1:3000",
                 "http://localhost:8080",
-                frontendUrl  // e.g. https://cosnima.up.railway.app
+                frontendUrl
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
@@ -119,8 +118,8 @@ public class SecurityConfig {
 
         @Override
         protected void doFilterInternal(HttpServletRequest request,
-                                        HttpServletResponse response,
-                                        FilterChain filterChain)
+                                        @NonNull HttpServletResponse response,
+                                        @NonNull FilterChain filterChain)
                 throws ServletException, IOException {
 
             String authHeader = request.getHeader("Authorization");
@@ -132,10 +131,19 @@ public class SecurityConfig {
 
                     if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                         if (jwtUtils.validateToken(token, userId)) {
-                            User userDetails = new User(userId, "", Collections.emptyList());
+                            com.shiro.aedessfrs.model.User.Role role = jwtUtils.extractRole(token);
+
+                            GrantedAuthority authority =
+                                    new SimpleGrantedAuthority("ROLE_" + role.name());
+
+                            List<GrantedAuthority> authorities =
+                                    List.of(authority);
+
                             UsernamePasswordAuthenticationToken authentication =
                                     new UsernamePasswordAuthenticationToken(
-                                            userDetails, null, userDetails.getAuthorities()
+                                            userId,
+                                            null,
+                                            authorities
                                     );
                             SecurityContextHolder.getContext().setAuthentication(authentication);
                         } else {

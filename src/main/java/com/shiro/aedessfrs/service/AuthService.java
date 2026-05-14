@@ -50,7 +50,7 @@ public class AuthService {
                 .build();
 
         User saved = userRepository.save(user);
-        String token = jwtUtils.generateToken(saved.getId());
+        String token = jwtUtils.generateToken(saved.getId(),saved.getRole());
         return new AuthResponse(mapper.toDto(saved), token);
 
     }
@@ -65,18 +65,18 @@ public class AuthService {
         if(!passwordEncoder.matches(loginUserRequest.password(), user.get().getPassword())) {
             throw new MismatchPasswordException("Wrong password");
         }
-        String token = jwtUtils.generateToken(user.get().getId());
+        String token = jwtUtils.generateToken(user.get().getId(), user.get().getRole());
         return new AuthResponse(mapper.toDto(user.get()),token);
     }
 
-    public UserResponse getCurrentUser(Authentication token) {
-        token = SecurityContextHolder.getContext().getAuthentication();
+    public UserResponse getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        assert token != null;
-        if(!token.isAuthenticated()) {
+        if (auth == null || auth.getName() == null) {
             throw new InvalidHeaderException("Unauthenticated User");
         }
-        UUID userId = UUID.fromString(jwtUtils.extractUserId(token.getName()));
+
+        UUID userId = UUID.fromString(auth.getName());
 
         Optional<User> user = userRepository.findById(userId);
         if(user.isEmpty()) {

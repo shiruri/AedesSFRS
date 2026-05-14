@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - AEDES</title>
+<script src="../js/toggles.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #f0f1f2;
+            --text-primary: #111111;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --accent: #111111;
+            --border: #e5e7eb;
+            --sidebar-width: 260px;
+            --header-height: 64px;
+        }
+
+        .dark-mode, :root.dark-mode {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-tertiary: #1f1f1f;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent: #ffffff;
+            --border: #27272a;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: background 0.2s ease, color 0.2s ease;
+            scrollbar-gutter: stable;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fadeIn 0.4s ease forwards; }
+        .animate-up { animation: slideUp 0.5s ease forwards; opacity: 0; }
+        .d1 { animation-delay: 0.1s; }
+        .d2 { animation-delay: 0.2s; }
+        .d3 { animation-delay: 0.3s; }
+        .d4 { animation-delay: 0.4s; }
+
+        .layout { display: flex; min-height: 100vh; }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            position: fixed; top: 0; left: 0; bottom: 0;
+            display: flex; flex-direction: column; z-index: 100;
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+        .sidebar-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .sidebar-logo {
+            font-size: 1.25rem; font-weight: 800; letter-spacing: 0.1em;
+            color: var(--text-primary); text-decoration: none;
+        }
+        .sidebar-close { display: none; background: none; border: none; color: var(--text-secondary); cursor: pointer; }
+        .sidebar-nav { flex: 1; padding: 1rem; overflow-y: auto; }
+        .sidebar-nav::-webkit-scrollbar { width: 4px; }
+        .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 100px; }
+        .sidebar-nav::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+        .nav-section { margin-bottom: 1.5rem; }
+        .nav-label {
+            font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.05em; color: var(--text-muted);
+            padding: 0 0.75rem; margin-bottom: 0.5rem;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.75rem; border-radius: 8px;
+            color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;
+            transition: all 0.15s; cursor: pointer; border: none; background: none;
+            width: 100%; text-align: left;
+        }
+        .nav-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+        .nav-item.active { background: var(--accent); color: var(--bg-primary); }
+        .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+        .sidebar-footer {
+            padding: 1rem; border-top: 1px solid var(--border);
+            display: flex; align-items: center; gap: 0.75rem;
+        }
+        .sidebar-user-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: var(--accent); color: var(--bg-primary);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.875rem; text-decoration: none;
+        }
+        .sidebar-user-info { flex: 1; min-width: 0; }
+        .sidebar-user-name { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
+        .sidebar-user-role { font-size: 0.75rem; color: var(--text-muted); }
+
+        .main { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; }
+
+        .header {
+            height: var(--header-height); background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 2rem; position: sticky; top: 0; z-index: 50;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .menu-toggle { display: none; background: none; border: none; color: var(--text-primary); cursor: pointer; }
+        .header-right { display: flex; align-items: center; gap: 0.75rem; }
+        .header-btn {
+            width: 38px; height: 38px; border-radius: 8px; border: 1px solid var(--border);
+            background: var(--bg-secondary); color: var(--text-primary);
+            cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+        }
+        .header-btn:hover { background: var(--bg-tertiary); }
+        .header-user {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.375rem 0.5rem 0.375rem 0.75rem; border-radius: 8px; cursor: pointer; transition: background 0.15s;
+        }
+        .header-user:hover { background: var(--bg-secondary); }
+        .header-user-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--accent); color: var(--bg-primary);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.8125rem; text-decoration: none;
+        }
+        .header-user-name { font-size: 0.875rem; font-weight: 500; text-decoration: none; color: inherit; }
+
+        .content { padding: 2rem; flex: 1; }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
+        .page-title { font-size: 1.5rem; font-weight: 700; }
+        .page-subtitle { font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; margin-bottom: 2rem; }
+        .stat-card {
+            background: var(--bg-primary); border: 1px solid var(--border); border-radius: 12px;
+            padding: 1.5rem; transition: all 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        .dark-mode .stat-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .stat-icon {
+            width: 44px; height: 44px; background: var(--bg-secondary); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; color: var(--text-primary); margin-bottom: 1rem;
+        }
+        .stat-value { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .stat-label { font-size: 0.875rem; color: var(--text-secondary); }
+
+        .panels-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+        .panel { background: var(--bg-primary); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .panel-header {
+            padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .panel-title { font-size: 1rem; font-weight: 600; }
+        .panel-link { font-size: 0.8125rem; color: var(--text-secondary); text-decoration: none; font-weight: 500; }
+        .panel-link:hover { color: var(--text-primary); }
+        .panel-body { padding: 0; }
+
+        .table { width: 100%; border-collapse: collapse; }
+        .table th {
+            text-align: left; padding: 0.75rem 1.5rem; font-size: 0.75rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);
+            background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+        }
+        .table td { padding: 1rem 1.5rem; font-size: 0.875rem; border-bottom: 1px solid var(--border); }
+        .table tr:last-child td { border-bottom: none; }
+        .table tr:hover td { background: var(--bg-secondary); }
+
+        .status { display: inline-flex; padding: 0.25rem 0.75rem; border-radius: 100px; font-size: 0.75rem; font-weight: 600; }
+        .status.pending { background: rgba(245,158,11,0.1); color: #f59e0b; }
+        .status.approved { background: rgba(34,197,94,0.1); color: #22c55e; }
+        .status.rejected { background: rgba(239,68,68,0.1); color: #ef4444; }
+        .status.completed { background: rgba(99,102,241,0.1); color: #6366f1; }
+
+        .quick-actions { display: grid; gap: 1rem; }
+        .quick-actions.grid-4 { grid-template-columns: repeat(4, 1fr); }
+        .quick-actions.grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .quick-actions.grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .quick-action {
+            background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px;
+            padding: 1.25rem; text-align: center; cursor: pointer; transition: all 0.2s;
+        }
+        .quick-action:hover { border-color: var(--text-secondary); transform: translateY(-2px); background: var(--bg-tertiary); }
+        .quick-action svg { width: 24px; height: 24px; color: var(--text-primary); margin-bottom: 0.5rem; }
+        .quick-action-title { font-size: 0.8125rem; font-weight: 600; }
+        .quick-action-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+        .sidebar-overlay.active { display: block; }
+
+        .collapse-toggle {
+            position: fixed; top: 1rem; left: calc(260px + 1rem); z-index: 110;
+            width: 38px; height: 38px; border-radius: 8px;
+            border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: left 0.3s ease, background 0.2s;
+        }
+        .collapse-toggle:hover { background: var(--bg-tertiary); }
+
+        .sidebar-collapsed .sidebar { transform: translateX(-260px); }
+        .sidebar-collapsed .main { margin-left: 0; }
+        .sidebar-collapsed .collapse-toggle { left: 1rem; }
+        .sidebar { transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease; }
+        .main { transition: margin-left 0.3s ease; }
+
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .panels-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-overlay.active { display: block; }
+            .sidebar-close { display: block; }
+            .main { margin-left: 0; }
+            .header { padding: 0 1rem; }
+            .collapse-toggle { display: none; }
+            .menu-toggle { display: block; }
+            .header-user-name { display: none; }
+            .content { padding: 1.25rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .quick-actions.grid-4, .quick-actions.grid-3 { grid-template-columns: repeat(2, 1fr); }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .table th, .table td { padding: 0.75rem 1rem; font-size: 0.8125rem; }
+        }
+
+        /* Page Loader */
+        .dloader{z-index:9999;position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease,visibility .35s ease}
+        .dloader.hidden{opacity:0;visibility:hidden;pointer-events:none}
+        .dloader-spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+</head>
+<body>
+    <div class="dloader" id="dloader"><div class="dloader-spin"></div></div>
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <button class="collapse-toggle" id="collapse-toggle" aria-label="Toggle sidebar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+
+    <div class="layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-logo">AEDES</span>
+                <button class="sidebar-close" id="sidebar-close">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div class="sidebar-footer">
+                <a href="../profile/profile.html" class="sidebar-user-avatar" id="user-avatar">A</a>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-name" id="user-name">User</div>
+                    <div class="sidebar-user-role" id="user-role">Role</div>
+                </div>
+                <button id="logout-btn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </button>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menu-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                </div>
+                <div class="header-right">
+                    <button class="header-btn" id="theme-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    </button>
+                    <div class="header-user">
+                        <a href="../profile/profile.html" class="header-user-avatar" id="header-avatar">A</a>
+                        <a href="../profile/profile.html" class="header-user-name" id="header-name">User</a>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content" id="main-content"></div>
+        </main>
+    </div>
+
+    <script>
+        // ─── Theme ────────────────────────────────────────────────────────
+        const body = document.body;
+        const savedTheme = localStorage.getItem('aedes-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) body.classList.add('dark-mode');
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            localStorage.setItem('aedes-theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
+        });
+
+        // ─── Mobile Sidebar ──────────────────────────────────────────────
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebar-overlay').classList.add('active');
+        });
+        document.getElementById('sidebar-close').addEventListener('click', closeSidebar);
+        document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('active');
+        }
+
+        // ─── Role Configuration ──────────────────────────────────────────
+        function getRole() {
+            try { return JSON.parse(localStorage.getItem('aedes_user'))?.role || 'ADMIN'; } catch(e) { return 'ADMIN'; }
+        }
+
+        const SIDEBAR_NAV = {
+            ADMIN: [
+                { label: 'Main', items: [
+                    { icon: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>', name: 'Dashboard', active: true }
+                ]},
+                { label: 'Management', items: [
+                    { icon: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>', name: 'Campuses', link: 'campuses/campuses.html' },
+                    { icon: '<rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="6" x2="9" y2="6.01"/><line x1="9" y1="12" x2="9" y2="12.01"/><line x1="9" y1="18" x2="9" y2="18.01"/>', name: 'Buildings', link: 'buildings/buildings.html' },
+                    { icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>', name: 'Rooms', link: 'rooms/rooms.html' },
+                    { icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>', name: 'Users', link: 'users/users.html' }
+                ]},
+                { label: 'Reservations', items: [
+                    { icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', name: 'All Reservations', link: 'reservations/reservations.html' },
+                    { icon: '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>', name: 'Approvals', link: 'approvals/approvals.html' }
+                ]},
+                { label: 'Analytics', items: [
+                    { icon: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>', name: 'Reports', link: 'reports/reports.html' },
+                    { icon: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>', name: 'Utilization', link: 'utilization/utilization.html' }
+                ]}
+            ],
+            FACULTY: [
+                { label: 'Main', items: [
+                    { icon: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>', name: 'Dashboard', active: true }
+                ]},
+                { label: 'Browse', items: [
+                    { icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>', name: 'Browse Rooms', link: 'rooms/browse.html' },
+                    { icon: '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>', name: 'Campus Map', link: 'map/map.html' }
+                ]},
+                { label: 'My Reservations', items: [
+                    { icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', name: 'All Reservations', link: 'reservations/reservations.html' }
+                ]}
+            ],
+            STUDENT: [
+                { label: 'Main', items: [
+                    { icon: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>', name: 'Dashboard', active: true }
+                ]},
+                { label: 'Browse', items: [
+                    { icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>', name: 'Browse Rooms', link: 'rooms/browse.html' },
+                    { icon: '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>', name: 'Campus Map', link: 'map/map.html' }
+                ]},
+                { label: 'Reservations', items: [
+                    { icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', name: 'My Reservations', link: 'reservations/reservations.html' }
+                ]}
+            ]
+        };
+
+        const STATS = {
+            ADMIN: [
+                { icon: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>', label: 'Campuses' },
+                { icon: '<rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>', label: 'Buildings' },
+                { icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>', label: 'Rooms' },
+                { icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>', label: 'Users' }
+            ],
+            FACULTY: [
+                { icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', label: 'My Reservations' },
+                { icon: '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>', label: 'Approved' },
+                { icon: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', label: 'Pending' },
+                { icon: '<polyline points="20 6 9 17 4 12"/>', label: 'Completed' }
+            ],
+            STUDENT: [
+                { icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', label: 'My Reservations' },
+                { icon: '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>', label: 'Approved' },
+                { icon: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', label: 'Pending' },
+                { icon: '<polyline points="20 6 9 17 4 12"/>', label: 'Completed' }
+            ]
+        };
+
+        const QUICK_ACTIONS = {
+            ADMIN: [
+                { icon: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>', label: 'Add Campus', sub: 'Create new campus' },
+                { icon: '<rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>', label: 'Add Building', sub: 'Create new building' },
+                { icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', label: 'New Reservation', sub: 'Book a room' },
+                { icon: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>', label: 'View Reports', sub: 'Analytics overview' }
+            ],
+            FACULTY: [
+                { icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', label: 'New Reservation', sub: 'Request a room' },
+                { icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>', label: 'Browse Rooms', sub: 'View availability' },
+                { icon: '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>', label: 'Campus Map', sub: 'Explore facilities' }
+            ],
+            STUDENT: [
+                { icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', label: 'New Reservation', sub: 'Book a room' },
+                { icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>', label: 'Browse Rooms', sub: 'View available rooms' }
+            ]
+        };
+
+        const PAGE_HEADERS = {
+            ADMIN: { title: 'Admin Dashboard', subtitle: 'Overview of your facility reservation system', cta: 'New Reservation' },
+            FACULTY: { title: 'Faculty Dashboard', subtitle: 'Manage your room reservations', cta: 'New Reservation' },
+            STUDENT: { title: 'Student Dashboard', subtitle: 'Browse and book available rooms', cta: 'New Reservation' }
+        };
+
+        const RESERVATION_HEADERS = {
+            ADMIN: ['User', 'Room', 'Date', 'Status'],
+            FACULTY: ['Room', 'Date', 'Time', 'Status'],
+            STUDENT: ['Room', 'Date', 'Time', 'Status']
+        };
+
+        // ─── Render ─────────────────────────────────────────────────────
+        function renderSidebar() {
+            const nav = document.getElementById('sidebar-nav');
+            nav.innerHTML = SIDEBAR_NAV[getRole()].map(section => `
+                <div class="nav-section">
+                    <div class="nav-label">${section.label}</div>
+                    ${section.items.map(item => item.link ? `
+                        <a href="${item.link}" class="nav-item${item.active ? ' active' : ''}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${item.icon}</svg>
+                            ${item.name}
+                        </a>
+                    ` : `
+                        <button class="nav-item${item.active ? ' active' : ''}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${item.icon}</svg>
+                            ${item.name}
+                        </button>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+
+        function renderContent() {
+            const content = document.getElementById('main-content');
+            const header = PAGE_HEADERS[getRole()];
+            const stats = STATS[getRole()];
+            const actions = QUICK_ACTIONS[getRole()];
+            const resHeaders = RESERVATION_HEADERS[getRole()];
+            const gridClass = 'grid-' + Math.min(actions.length, 4);
+
+            content.innerHTML = `
+                <div class="page-header animate-fade">
+                    <div>
+                        <h1 class="page-title">${header.title}</h1>
+                        <p class="page-subtitle">${header.subtitle}</p>
+                    </div>
+                    <button style="padding:0.625rem 1.25rem;background:var(--accent);color:var(--bg-primary);border:none;border-radius:8px;font-weight:600;font-size:0.875rem;cursor:pointer;display:flex;align-items:center;gap:0.5rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        ${header.cta}
+                    </button>
+                </div>
+
+                <div class="stats-grid animate-up d1">
+                    ${stats.map(s => `
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${s.icon}</svg>
+                            </div>
+                            <div class="stat-value">-</div>
+                            <div class="stat-label">${s.label}</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="panels-grid">
+                    <div class="panel animate-up d2">
+                        <div class="panel-header">
+                            <h2 class="panel-title">Recent Reservations</h2>
+                            <a href="#" class="panel-link">View All</a>
+                        </div>
+                        <div class="panel-body">
+                            <table class="table">
+                                <thead><tr>${resHeaders.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="panel animate-up d3">
+                        <div class="panel-header">
+                            <h2 class="panel-title">Activity</h2>
+                        </div>
+                        <div class="panel-body">
+                            <div class="empty-state" style="padding:2rem 1.5rem;text-align:center;">
+                                <p style="color:var(--text-muted);font-size:0.875rem;line-height:1.6;">
+                                    No recent activity
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 style="font-size:1rem;font-weight:600;margin-bottom:1rem;" class="animate-up d3">Quick Actions</h2>
+                <div class="quick-actions ${gridClass} animate-up d4">
+                    ${actions.map(a => `
+                        <div class="quick-action">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${a.icon}</svg>
+                            <div class="quick-action-title">${a.label}</div>
+                            <div class="quick-action-sub">${a.sub}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderUser() {
+            let name = 'User', userRole = getRole();
+            try {
+                const u = JSON.parse(localStorage.getItem('aedes_user'));
+                if (u) { name = u.name || u.username || 'User'; userRole = u.role || getRole(); }
+            } catch(e) {}
+            const initial = name.charAt(0).toUpperCase();
+            document.getElementById('user-name').textContent = name;
+            document.getElementById('user-role').textContent = userRole.charAt(0) + userRole.slice(1).toLowerCase();
+            document.getElementById('header-name').textContent = name;
+            document.querySelectorAll('.sidebar-user-avatar, .header-user-avatar').forEach(el => el.textContent = initial);
+            document.getElementById('user-avatar').textContent = initial;
+            document.getElementById('header-avatar').textContent = initial;
+        }
+
+        renderSidebar();
+        renderContent();
+        renderUser();
+
+        // ─── Sidebar Collapse ──────────────────────────────────────────
+        const collapseToggle = document.getElementById('collapse-toggle');
+        const STORAGE_KEY = 'aedes-sidebar-collapsed';
+        if (localStorage.getItem(STORAGE_KEY) === 'true' && window.innerWidth > 768) {
+            document.body.classList.add('sidebar-collapsed');
+        }
+        collapseToggle.addEventListener('click', () => {
+            document.body.classList.toggle('sidebar-collapsed');
+            localStorage.setItem(STORAGE_KEY, document.body.classList.contains('sidebar-collapsed'));
+        });
+
+        // Hide loader
+        setTimeout(function(){document.getElementById('dloader').classList.add('hidden')}, 400);
+
+        // ─── Logout ──────────────────────────────────────────────────────
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('aedes_token');
+            localStorage.removeItem('aedes_user');
+            window.location.href = '../index.html';
+        });
+
+    </script>
+</body>
+</html>

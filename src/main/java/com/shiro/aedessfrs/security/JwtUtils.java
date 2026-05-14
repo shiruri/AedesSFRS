@@ -1,5 +1,6 @@
 package com.shiro.aedessfrs.security;
 
+import com.shiro.aedessfrs.model.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,22 +32,25 @@ public class JwtUtils {
      * @param userId the user's UUID as string
      * @return JWT token
      */
-    public String generateToken(String userId) {
+    public String generateToken(String userId,User.Role role) {
         return Jwts.builder()
                 .setSubject(userId)
+                .claim("role",role.name())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
-
-    /**
+    public User.Role extractRole(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("role", User.Role.class);
+    }    /**
      * Generate a JWT token for a given UUID object.
      * @param userId the user's UUID
      * @return JWT token
      */
-    public String generateToken(UUID userId) {
-        return generateToken(userId.toString());
+    public String generateToken(UUID userId, User.Role role) {
+        return generateToken(userId.toString(),role);
     }
 
     /**
