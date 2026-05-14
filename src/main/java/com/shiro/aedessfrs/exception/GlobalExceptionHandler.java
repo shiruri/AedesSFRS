@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoSuchUserFoundException.class)
-    public ResponseEntity<ApiErrorResponse> handleNoSuchUserFoundException(DuplicateUserException ex,
+    public ResponseEntity<ApiErrorResponse> handleNoSuchUserFoundException(NoSuchUserFoundException ex,
                                                                 HttpServletRequest request) {
         ApiErrorResponse errorResponse = new ApiErrorResponse(
                 Instant.now()
@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
     @ExceptionHandler(InvalidHeaderException.class)
-    public ResponseEntity<ApiErrorResponse> handleInvalidHeaderException(DuplicateUserException ex,
+    public ResponseEntity<ApiErrorResponse> handleInvalidHeaderException(InvalidHeaderException ex,
                                                                            HttpServletRequest request) {
         ApiErrorResponse errorResponse = new ApiErrorResponse(
                 Instant.now()
@@ -66,7 +66,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MismatchPasswordException.class)
-    public ResponseEntity<ApiErrorResponse> handleMismatchPasswordException(DuplicateUserException ex,
+    public ResponseEntity<ApiErrorResponse> handleMismatchPasswordException(MismatchPasswordException ex,
                                                                 HttpServletRequest request) {
         ApiErrorResponse errorResponse = new ApiErrorResponse(
                 Instant.now()

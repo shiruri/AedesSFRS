@@ -13,7 +13,7 @@ import com.shiro.aedessfrs.mapper.UserMapper;
 import com.shiro.aedessfrs.model.User;
 import com.shiro.aedessfrs.repository.UserRepository;
 import com.shiro.aedessfrs.security.JwtUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +22,7 @@ import java.util.UUID;
 
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -29,26 +30,22 @@ public class AuthService {
     private final UserMapper mapper;
     private final JwtUtils jwtUtils;
 
-    @Autowired
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper mapper, JwtUtils jwtUtils) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.mapper = mapper;
-        this.jwtUtils = jwtUtils;
-    }
 
     public AuthResponse registerUser (CreateUseRequest createUseRequest) {
-
-        if (userRepository.existsByUsername(createUseRequest.username())) {
+        System.out.println("Register User: "+ createUseRequest.toString());
+        if (userRepository.existsByName(createUseRequest.name())) {
             throw new DuplicateUserException("Username is already in use");
         }
         if (userRepository.existsByEmail(createUseRequest.email())) {
             throw new DuplicateUserException("Email is already in use");
         }
-        User user = new User();
-        user.setUsername(createUseRequest.username());
-        user.setEmail(createUseRequest.email());
-        user.setPasswordHash(passwordEncoder.encode(createUseRequest.password()));
+        User user = User.builder()
+                .name(createUseRequest.name())
+                .email(createUseRequest.email())
+                .password(passwordEncoder.encode(createUseRequest.password()))
+                .role(createUseRequest.role())
+                .build();
+
         User saved = userRepository.save(user);
         String token = jwtUtils.generateToken(saved.getId());
         return new AuthResponse(mapper.toDto(saved), token);
@@ -56,13 +53,13 @@ public class AuthService {
     }
 
     public AuthResponse loginUser (LoginUserRequest loginUserRequest) {
-        Optional<User> user = userRepository.findByUsernameOrEmail(
+        Optional<User> user = userRepository.findByNameOrEmail(
                 loginUserRequest.login(),loginUserRequest.login());
 
         if(user.isEmpty()) {
             throw new NoSuchUserFoundException("User not found");
         }
-        if(!passwordEncoder.matches(loginUserRequest.password(), user.get().getPasswordHash())) {
+        if(!passwordEncoder.matches(loginUserRequest.password(), user.get().getPassword())) {
             throw new MismatchPasswordException("Wrong password");
         }
         String token = jwtUtils.generateToken(user.get().getId());
