@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.antlr.v4.runtime.misc.NotNull;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
@@ -35,28 +34,28 @@ public class User {
         }
     }
 
-    @NotNull
+    @NotBlank
     @Size(max = 50)
     @Column(unique = true, nullable = false)
     private String name;
 
-    @NotNull
+    @NotBlank
     @Email
     @Size(max = 100)
     @Column(unique = true, nullable = false)
     private String email;
 
-    @NotNull
+    @NotBlank
     @Size(max = 255)
     @Column(nullable = false)
     private String password;
 
-    @NotNull
+    @NotBlank
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role = Role.STUDENT;
 
-    @NotNull
+    @NotBlank
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

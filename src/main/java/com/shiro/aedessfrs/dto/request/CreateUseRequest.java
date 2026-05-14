@@ -5,20 +5,20 @@ import com.shiro.aedessfrs.model.User;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import org.antlr.v4.runtime.misc.NotNull;
 
 public record CreateUseRequest(
-        @NotNull
+        @NotBlank
         @Size(max = 50)
         String name,
 
 
-        @NotNull
+        @NotBlank
         @Size(max = 255)
         String password,
 
-        @NotNull
+        @NotBlank
         @Email
         @Size(max = 100)
         String email,

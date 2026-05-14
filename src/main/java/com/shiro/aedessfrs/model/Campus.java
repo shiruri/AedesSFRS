@@ -2,13 +2,12 @@ package com.shiro.aedessfrs.model;
 
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.antlr.v4.runtime.misc.NotNull;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -38,17 +37,17 @@ public class Campus {
         }
     }
 
-    @NotNull
+    @NotBlank
     @Size(max = 100)
     @Column(unique = true, nullable = false)
     private String campusName;
 
 
-    @NotNull
+    @NotBlank
     @Size(max = 300)
     @Column(unique = false, nullable = true)
     private String description;
 
-    @NotNull
+    @NotBlank
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();}
