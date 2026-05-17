@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -56,16 +56,19 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-he
 </div>
 </div>
 </div>
-<script src="../shared/sidebar.js"></script>
+<script src="../../js/api.js"></script><script src="../shared/sidebar.js"></script>
+<script src="../../js/auth-guard.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     AedesSidebar.buildSidebar('All Reservations');
     AedesSidebar.initSidebarToggle();
     AedesSidebar.populateHeaderUser();
+    if (AuthGuard.requireAuth()) {
     setTimeout(function(){
         document.getElementById('loader').classList.add('hidden');
         document.querySelectorAll('.page-hdr,.card').forEach(function(e,i){e.style.animation='f .5s ease forwards';e.style.animationDelay=(i*0.1)+'s';e.style.opacity='0'});
     },100);
+    } // end AuthGuard.requireAuth()
 });
 </script>
 </body>

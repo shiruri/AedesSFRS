@@ -50,13 +50,81 @@ function isAuthenticated() {
 }
 
 /**
+ * Check if user has required role
+ */
+function hasRole(requiredRole) {
+    const user = getUser();
+    if (!user || !user.role) return false;
+    if (typeof requiredRole === 'string') {
+        return user.role === requiredRole;
+    }
+    if (Array.isArray(requiredRole)) {
+        return requiredRole.includes(user.role);
+    }
+    return false;
+}
+
+/**
+ * Check if user is admin
+ */
+function isAdmin() {
+    return hasRole('ADMIN');
+}
+
+/**
  * Logout user
  */
 function logout() {
     removeToken();
     localStorage.removeItem('aedes_user');
-    var depth = window.location.pathname.split('/').length - 2;
-    window.location.href = depth > 0 ? '../'.repeat(depth) + 'index.html' : 'index.html';
+    var origin = window.location.origin;
+    var path = window.location.pathname;
+    if (path.includes('/dashboard/')) {
+        window.location.href = origin + path.replace(/\/dashboard\/.*/, '/index.html');
+    } else {
+        window.location.href = origin + '/index.html';
+    }
+}
+
+/**
+ * Parse error response to user-friendly message
+ */
+function parseError(response, endpoint) {
+    if (response.status === 0) {
+        return 'Cannot connect to server. Please ensure backend is running.';
+    }
+    
+    if (response.status === 401) {
+        if (endpoint.includes('/auth/login')) {
+            return 'Invalid username/email or password.';
+        }
+        if (endpoint.includes('/auth/register')) {
+            return 'Registration failed. Please try again.';
+        }
+        return 'Session expired. Please login again.';
+    }
+    
+    if (response.status === 403) {
+        return 'You do not have permission to perform this action.';
+    }
+    
+    if (response.status === 404) {
+        return 'Requested resource not found.';
+    }
+    
+    if (response.status === 400) {
+        return 'Invalid input. Please check your data and try again.';
+    }
+    
+    if (response.status === 409) {
+        return 'This record already exists.';
+    }
+    
+    if (response.status === 500) {
+        return 'Server error. Please try again later.';
+    }
+    
+    return 'Request failed with status ' + response.status;
 }
 
 /**
@@ -72,39 +140,34 @@ async function apiRequest(endpoint, options = {}) {
         ...options.headers
     };
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+    
     const config = {
         ...options,
         headers,
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT),
+        signal: controller.signal,
         mode: 'cors',
         credentials: 'include'
     };
 
     try {
         const response = await fetch(url, config);
+        clearTimeout(timeoutId);
         
-        if (response.status === 0) {
-            throw new Error('Cannot connect to server. Please ensure backend is running on port 8080.');
-        }
-
         if (response.status === 401) {
-            if (!endpoint.includes('/auth/login')) {
-                logout();
-                throw new Error('Session expired. Please login again.');
-            }
-            var errData = await response.json().catch(function() { return {}; });
-            throw new Error(errData.message || errData.error || 'Invalid credentials');
+            throw new Error(parseError(response, endpoint));
         }
-
-        if (response.status === 404) {
-            throw new Error('Endpoint not found: ' + endpoint);
-        }
-
+        
         if (!response.ok) {
-            let errorMessage = 'Request failed';
+            let errorMessage = parseError(response, endpoint);
             try {
                 const errorData = await response.json();
-                errorMessage = errorData.message || errorData.error || errorMessage;
+                if (errorData.message) {
+                    errorMessage = errorData.message;
+                } else if (errorData.error) {
+                    errorMessage = errorData.error;
+                }
             } catch (e) {}
             throw new Error(errorMessage);
         }
@@ -113,8 +176,15 @@ async function apiRequest(endpoint, options = {}) {
             return null;
         }
 
-        return await response.json();
+        try {
+            return await response.json();
+        } catch (e) {
+            return null;
+        }
     } catch (error) {
+        if (error.name === 'AbortError') {
+            throw new Error('Request timed out. Please try again.');
+        }
         console.error('[API Error]', error.message);
         throw error;
     }
@@ -141,7 +211,7 @@ const API = {
         register: async function(name, email, password, role) {
             const data = await apiRequest('/api/auth/register', {
                 method: 'POST',
-                body: JSON.stringify({ name, email, password, role })
+                body: JSON.stringify({ name, password, email, role })
             });
             if (data.token) {
                 setToken(data.token);
@@ -158,7 +228,36 @@ const API = {
             return data;
         },
         
+        updatePassword: async function(currentPassword, newPassword) {
+            const user = getUser();
+            return apiRequest('/api/user/update', {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    id: user.id,
+                    name: user.name || user.username,
+                    email: user.email,
+                    password: newPassword,
+                    role: user.role
+                })
+            });
+        },
+        
         logout: logout
+    },
+
+    user: {
+        list: function(page, size) {
+            return apiRequest('/api/user?page=' + (page || 0) + '&size=' + (size || 50), { method: 'GET' });
+        },
+        update: function(data) {
+            return apiRequest('/api/user/update', {
+                method: 'PATCH',
+                body: JSON.stringify(data)
+            });
+        },
+        delete: function(id) {
+            return apiRequest('/api/user/delete/' + id, { method: 'DELETE' });
+        }
     }
 };
 
@@ -171,5 +270,7 @@ window.Auth = {
     getUser,
     setUser,
     isAuthenticated,
+    hasRole,
+    isAdmin,
     logout
 };

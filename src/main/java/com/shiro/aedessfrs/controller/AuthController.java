@@ -22,8 +22,6 @@ public class AuthController {
         this.authService = authService;
     }
 
-
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> registerUser(@Valid @RequestBody CreateUseRequest createUseRequest, BindingResult bindingResult) {
         return ResponseEntity.ok().body(authService.registerUser(createUseRequest));

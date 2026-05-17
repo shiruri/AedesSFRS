@@ -4,18 +4,17 @@ package com.shiro.aedessfrs.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Data
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -24,14 +23,12 @@ public class Campus {
 
     @Id
     @JdbcTypeCode(SqlTypes.VARCHAR)
-    @Column(name = "id", length = 36, updatable = false, nullable = false)
-    private UUID campusId;
+    @UuidGenerator
+    @Column(name = "campus_id", length = 36, updatable = false, nullable = false)
+    private UUID id;
 
     @PrePersist
     protected void onCreate() {
-        if (this.campusId == null) {
-            this.campusId = UUID.randomUUID();
-        }
         if (this.createdAt == null) {
             this.createdAt = LocalDateTime.now();
         }
@@ -40,7 +37,7 @@ public class Campus {
     @NotBlank
     @Size(max = 100)
     @Column(unique = true, nullable = false)
-    private String campusName;
+    private String name;
 
 
     @NotBlank
@@ -48,6 +45,5 @@ public class Campus {
     @Column(unique = false, nullable = true)
     private String description;
 
-    @NotBlank
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();}

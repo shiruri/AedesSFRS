@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AEDES - Smart Facility Reservation</title>
 <script src="js/toggles.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth-guard.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -243,6 +245,18 @@
         }
         
         .btn-submit:hover { transform: translateY(-1px); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .login-error {
+            margin-top: 0.75rem;
+            padding: 0.625rem 0.75rem;
+            border-radius: 8px;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            font-size: 0.8125rem;
+            text-align: center;
+        }
 
         .card-footer {
             text-align: center;
@@ -393,7 +407,7 @@
                             <p class="card-subtitle">Sign in to continue</p>
                         </div>
 
-                        <form class="form" onsubmit="event.preventDefault(); alert('Backend demo');">
+                        <form class="form" id="login-form">
                             <div class="form-group">
                                 <label class="form-label" for="login">Email or Username</label>
                                 <input type="text" id="login" class="form-input" placeholder="Enter your email" required>
@@ -404,7 +418,8 @@
                                 <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
                             </div>
                             
-                            <button type="submit" class="btn-submit">Sign In</button>
+                            <button type="submit" class="btn-submit" id="login-btn">Sign In</button>
+                            <div class="login-error" id="login-error" style="display:none;"></div>
                         </form>
 
                         <div class="disclaimer">
@@ -431,12 +446,38 @@
     </div>
 
     <script>
+        if (Auth.isAuthenticated()) {
+            window.location.href = 'dashboard/dashboard.html';
+        }
+
         window.addEventListener('load', () => {
             setTimeout(() => {
                 document.getElementById('page-loader').classList.add('hidden');
                 document.getElementById('login-card').classList.add('visible');
                 document.querySelectorAll('.animate-fade-in-up').forEach(el => el.style.opacity = '1');
             }, 500);
+        });
+
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var btn = document.getElementById('login-btn');
+            var errorEl = document.getElementById('login-error');
+            var loginEl = document.getElementById('login');
+            var passwordEl = document.getElementById('password');
+
+            btn.disabled = true;
+            btn.textContent = 'Signing in...';
+            errorEl.style.display = 'none';
+
+            try {
+                await API.auth.login(loginEl.value.trim(), passwordEl.value);
+                window.location.href = 'dashboard/dashboard.html';
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
+            }
         });
     </script>
 </body>

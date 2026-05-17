@@ -19,6 +19,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-he
 .loader-spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes f{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeInRow{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.loading-row td{text-align:center;padding:3rem 0}
+.loading-row .spin{display:inline-block;width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
 .toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem}
 .toolbar-left{display:flex;align-items:center;gap:.5rem}
 .toolbar-left .filter{position:relative}
@@ -57,6 +60,26 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-he
 .confirm-box{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:1rem;text-align:center;margin-bottom:1rem}
 .confirm-box p{font-size:.875rem;color:var(--txt2)}
 .confirm-box strong{color:var(--txt)}
+.card-hdr{display:flex;align-items:center;gap:.75rem;padding:1rem 1.25rem;border-bottom:1px solid var(--border)}
+.user-grid{display:none;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;padding:1.25rem}
+.user-grid.active{display:grid}
+.tb-wrap.active{display:block}
+.tb-wrap{display:none}
+.tb-wrap.visible{display:block}
+.user-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.25rem;transition:all .2s;animation:fadeInRow .35s ease forwards;opacity:0}
+.user-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08)}
+.user-card-top{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
+.user-card-avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9375rem;flex-shrink:0}
+.user-card-info{flex:1;min-width:0}
+.user-card-name{font-size:.875rem;font-weight:600;color:var(--txt)}
+.user-card-email{font-size:.75rem;color:var(--txt3);margin-top:.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-card-role{margin-bottom:.75rem}
+.user-card-actions{display:flex;gap:.375rem;border-top:1px solid var(--border);padding-top:.75rem}
+.user-card-actions .btn-icon{padding:.35rem;border-radius:6px}
+.layout-tog{display:flex;align-items:center;gap:2px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:2px;margin-left:auto}
+.layout-tog button{width:30px;height:28px;border-radius:6px;border:none;background:transparent;color:var(--txt3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.layout-tog button.active{background:var(--bg);color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.layout-tog button:hover:not(.active){color:var(--txt)}
 @media(max-width:600px){.toolbar{flex-direction:row;flex-wrap:wrap}.toolbar-left{flex:1;min-width:0}.toolbar-left .filter input{width:100%}.toolbar .btn{flex-shrink:0}.tb th,.tb td{padding:.5rem .75rem;font-size:.8125rem}}
 .hdr-user{display:flex;align-items:center;gap:.6rem;padding:.3rem .4rem .3rem .75rem;border-radius:8px;cursor:pointer;text-decoration:none;color:inherit;transition:background .15s}
 .hdr-user:hover{background:var(--bg2)}
@@ -111,6 +134,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-he
 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
 <input type="text" placeholder="Search users...">
 </div>
+<div class="layout-tog" id="layout-tog">
+<button class="active" data-view="table" title="Table view"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></button>
+<button data-view="grid" title="Grid view"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></button>
+</div>
 </div>
 <button class="btn btn-primary" id="add-student-btn">
 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -120,45 +147,15 @@ Add Student
 </div>
 <div class="card an">
 <div class="card-hdr"><h2>All Users</h2><span style="font-size:.8125rem;color:var(--txt3)" id="user-count">3 users</span></div>
+<div class="tb-wrap visible" id="table-wrap">
 <table class="tb">
-<thead><tr><th>User</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+<thead><tr><th>User</th><th>Role</th><th>Actions</th></tr></thead>
 <tbody id="user-table-body">
-<tr>
-<td><div class="user-cell"><div class="avatar-sm">A</div><div><div class="name">Admin User</div><div class="email">admin@university.edu</div></div></div></td>
-<td><span class="role-badge admin">Admin</span></td>
-<td><span style="font-size:.75rem;color:#22c55e;">Active</span></td>
-<td class="actions">
-<button class="btn-icon edit-user" data-id="1" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-<button class="btn-icon delete-user" data-id="1" data-name="Admin User" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-</td>
-</tr>
-<tr>
-<td><div class="user-cell"><div class="avatar-sm">C</div><div><div class="name">Cruz Faculty</div><div class="email">faculty@university.edu</div></div></div></td>
-<td><span class="role-badge faculty">Faculty</span></td>
-<td><span style="font-size:.75rem;color:#22c55e;">Active</span></td>
-<td class="actions">
-<button class="btn-icon edit-user" data-id="2" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-<button class="btn-icon delete-user" data-id="2" data-name="Cruz Faculty" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-</td>
-</tr>
-<tr>
-<td><div class="user-cell"><div class="avatar-sm">R</div><div><div class="name">Reyes Student</div><div class="email">student@university.edu</div></div></div></td>
-<td><span class="role-badge student">Student</span></td>
-<td><span style="font-size:.75rem;color:#22c55e;">Active</span></td>
-<td class="actions">
-<button class="btn-icon edit-user" data-id="3" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-<button class="btn-icon delete-user" data-id="3" data-name="Reyes Student" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-</td>
-</tr>
 </tbody>
 </table>
-<div class="pages">
-<button class="page-btn" disabled><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
-<button class="page-btn active">1</button>
-<button class="page-btn">2</button>
-<button class="page-btn">3</button>
-<button class="page-btn"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
 </div>
+<div class="user-grid" id="user-grid"></div>
+<div class="pages" id="pagination"></div>
 </div>
 </div>
 </div>
@@ -241,6 +238,7 @@ Add Student
 </div>
 </div>
 <script src="../../js/api.js"></script>
+<script src="../../js/auth-guard.js"></script>
 <script src="../../js/modal.js"></script>
 <script src="../shared/sidebar.js"></script>
 <script>
@@ -267,11 +265,333 @@ document.addEventListener('DOMContentLoaded', function() {
     AedesSidebar.buildSidebar('Users');
     AedesSidebar.initSidebarToggle();
     AedesSidebar.populateHeaderUser();
-    setTimeout(function(){document.getElementById('loader').classList.add('hidden');document.querySelectorAll('.page-hdr,.card,.toolbar,.chips').forEach(function(e,i){e.style.animation='f .5s ease forwards';e.style.animationDelay=(i*0.1)+'s';e.style.opacity='0'})},150);
-    // --- Modals ---------------------------------------------------------
+
+    if (AuthGuard.requireAuth()) {
+    if (!AuthGuard.requireRole('ADMIN')) {
+        setTimeout(function(){document.getElementById('loader').classList.add('hidden')},100);
+        return;
+    }
+
+    setTimeout(function(){document.getElementById('loader').classList.add('hidden')},100);
+
+    // ─── Sliding Window Cache ──────────────────────────────────────────
+    var cache = {
+        allUsers: [],           // accumulated fetched users
+        fetchedPages: {},       // { pageNumber: true }
+        totalPages: 0,
+        totalElements: 0,
+        currentPage: 0,
+        pageSize: 10,
+        searchQuery: '',
+        roleFilter: 'All'
+    };
+
+    // ─── Loading indicator ────────────────────────────────────────────
+    function showLoading() {
+        if (currentView === 'grid') {
+            document.getElementById('user-grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spin" style="display:inline-block;width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite"></div><div style="margin-top:.75rem;font-size:.8125rem;color:var(--txt3)">Loading users...</div></div>';
+        } else {
+            var tbody = document.getElementById('user-table-body');
+            tbody.innerHTML = '<tr class="loading-row"><td colspan="3"><div class="spin"></div><div style="margin-top:.75rem;font-size:.8125rem;color:var(--txt3)">Loading users...</div></td></tr>';
+        }
+    }
+
+    // ─── Fetch one page from backend, cache it ─────────────────────────
+    function fetchPage(page, cb) {
+        if (cache.fetchedPages[page]) { if (cb) cb(); return; }
+        showLoading();
+        API.user.list(page, cache.pageSize).then(function(resp) {
+            cache.fetchedPages[page] = true;
+            cache.totalPages = resp.totalPages;
+            cache.totalElements = resp.totalElements;
+            var users = resp.content || [];
+            // Merge into allUsers, avoid duplicates by id
+            var existingIds = {};
+            cache.allUsers.forEach(function(u) { existingIds[u.id] = true; });
+            users.forEach(function(u) { if (!existingIds[u.id]) { cache.allUsers.push(u); existingIds[u.id] = true; } });
+            if (cb) cb();
+        }).catch(function(err) {
+            AppToast.error(err.message);
+            if (cb) cb();
+        });
+    }
+
+    // ─── Fetch the NEXT unfetched page (for progressive search) ────────
+    function fetchNextUnfetchedPage(cb) {
+        for (var p = 0; p < cache.totalPages; p++) {
+            if (!cache.fetchedPages[p]) {
+                fetchPage(p, cb);
+                return true;
+            }
+        }
+        if (cb) cb();
+        return false;
+    }
+
+    // ─── Render from cache ────────────────────────────────────────────
+    function renderFromCache() {
+        var filtered = applyFilters();
+        var start = cache.currentPage * cache.pageSize;
+        var pageUsers = filtered.slice(start, start + cache.pageSize);
+        document.getElementById('user-count').textContent = filtered.length + ' user' + (filtered.length !== 1 ? 's' : '');
+        if (currentView === 'grid') {
+            renderUsersGrid(pageUsers);
+            document.getElementById('table-wrap').classList.remove('visible');
+            document.getElementById('user-grid').classList.add('active');
+        } else {
+            renderUsers(pageUsers);
+            document.getElementById('table-wrap').classList.add('visible');
+            document.getElementById('user-grid').classList.remove('active');
+        }
+        renderPagination(filtered.length);
+    }
+
+    function applyFilters() {
+        return cache.allUsers.filter(function(u) {
+            var filterRole = cache.roleFilter.toUpperCase();
+            if (filterRole !== 'ALL' && u.role !== filterRole) return false;
+            if (cache.searchQuery) {
+                var q = cache.searchQuery.toLowerCase();
+                var name = (u.name || u.username || '').toLowerCase();
+                var email = (u.email || '').toLowerCase();
+                if (!name.includes(q) && !email.includes(q)) return false;
+            }
+            return true;
+        });
+    }
+
+    // ─── Load (fetch current page, cache it) ───────────────────────────
+    function loadUsers(page) {
+        cache.currentPage = page;
+        fetchPage(page, function() {
+            renderFromCache();
+            animateIn();
+            // If current page slice is empty but we have data, try adjacent
+            var filtered = applyFilters();
+            var start = cache.currentPage * cache.pageSize;
+            var pageUsers = filtered.slice(start, start + cache.pageSize);
+            if (pageUsers.length === 0 && filtered.length > 0) {
+                cache.currentPage = Math.max(0, Math.min(cache.totalPages - 1, page));
+                renderFromCache();
+            }
+        });
+    }
+
+    function animateIn() {
+        document.querySelectorAll('.page-hdr,.card,.toolbar,.chips').forEach(function(e,i){
+            e.style.animation='f .5s ease forwards';
+            e.style.animationDelay=(i*0.1)+'s';
+            e.style.opacity='0';
+        });
+    }
+
+    // ─── Search + Role Filter (progressive fetch if no results) ────────
+    function triggerFilter() {
+        cache.currentPage = 0;
+        var filtered = applyFilters();
+        if (filtered.length > 0) {
+            renderFromCache();
+            return;
+        }
+        // No results in cache — fetch next pages progressively
+        var more = fetchNextUnfetchedPage(function() {
+            var filtered2 = applyFilters();
+            if (filtered2.length > 0) {
+                renderFromCache();
+            } else {
+                // Try one more round
+                var more2 = fetchNextUnfetchedPage(function() {
+                    renderFromCache();
+                });
+                if (!more2) renderFromCache();
+            }
+        });
+        if (!more) renderFromCache();
+    }
+
+    // ─── Render Table ────────────────────────────────────────────────────
+    function renderUsers(users) {
+        var tbody = document.getElementById('user-table-body');
+        if (!users.length) {
+            tbody.innerHTML = '<tr><td colspan="3" class="empty-state" style="padding:2rem;text-align:center;color:var(--txt3);font-size:.875rem">No users found</td></tr>';
+            return;
+        }
+        tbody.innerHTML = users.map(function(u, idx) {
+            var initial = (u.name || u.username || '?').charAt(0).toUpperCase();
+            var roleClass = (u.role || '').toLowerCase();
+            var name = u.name || u.username || 'Unknown';
+            var delay = (idx * 0.04);
+            return '<tr style="animation:fadeInRow .35s ease forwards;animation-delay:' + delay + 's;opacity:0">' +
+                '<td><div class="user-cell"><div class="avatar-sm">' + initial + '</div><div><div class="name">' + name + '</div><div class="email">' + (u.email || '') + '</div></div></div></td>' +
+                '<td><span class="role-badge ' + roleClass + '">' + (u.role || '') + '</span></td>' +
+                '<td class="actions">' +
+                '<button class="btn-icon edit-user" data-id="' + u.id + '" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+                '<button class="btn-icon delete-user" data-id="' + u.id + '" data-name="' + name + '" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>' +
+                '</td></tr>';
+        }).join('');
+        wireRowButtons();
+    }
+
+    // ─── Render Grid ────────────────────────────────────────────────────
+    function renderUsersGrid(users) {
+        var grid = document.getElementById('user-grid');
+        if (!users.length) {
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--txt3);font-size:.875rem">No users found</div>';
+            return;
+        }
+        grid.innerHTML = users.map(function(u, idx) {
+            var initial = (u.name || u.username || '?').charAt(0).toUpperCase();
+            var roleClass = (u.role || '').toLowerCase();
+            var name = u.name || u.username || 'Unknown';
+            var delay = (idx * 0.04);
+            return '<div class="user-card" style="animation-delay:' + delay + 's">' +
+                '<div class="user-card-top">' +
+                '<div class="user-card-avatar">' + initial + '</div>' +
+                '<div class="user-card-info">' +
+                '<div class="user-card-name">' + name + '</div>' +
+                '<div class="user-card-email">' + (u.email || '') + '</div>' +
+                '</div></div>' +
+                '<div class="user-card-role"><span class="role-badge ' + roleClass + '">' + (u.role || '') + '</span></div>' +
+                '<div class="user-card-actions">' +
+                '<button class="btn-icon edit-user" data-id="' + u.id + '" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+                '<button class="btn-icon delete-user" data-id="' + u.id + '" data-name="' + name + '" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>' +
+                '</div></div>';
+        }).join('');
+        wireRowButtons();
+    }
+
+    // ─── Layout Toggle ──────────────────────────────────────────────────
+    var currentView = localStorage.getItem('aedes-user-view') || 'table';
+
+    function setView(view) {
+        currentView = view;
+        localStorage.setItem('aedes-user-view', view);
+        document.querySelectorAll('#layout-tog button').forEach(function(b) {
+            b.classList.toggle('active', b.dataset.view === view);
+        });
+        var tableWrap = document.getElementById('table-wrap');
+        var grid = document.getElementById('user-grid');
+        if (view === 'grid') {
+            tableWrap.classList.remove('visible');
+            grid.classList.add('active');
+        } else {
+            tableWrap.classList.add('visible');
+            grid.classList.remove('active');
+        }
+        renderFromCache();
+    }
+
+    // ─── Pagination ─────────────────────────────────────────────────────
+    function renderPagination(totalFiltered) {
+        var el = document.getElementById('pagination');
+        var totalPages = Math.ceil(totalFiltered / cache.pageSize) || 1;
+        if (totalPages <= 1 && cache.totalPages <= 1) { el.innerHTML = ''; return; }
+        var h = '<div style="display:flex;align-items:center;gap:.375rem;flex-wrap:wrap">';
+        h += '<button class="page-btn" data-page="' + (cache.currentPage - 1) + '"' + (cache.currentPage === 0 ? ' disabled' : '') + '><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>';
+        var shown = 0;
+        for (var i = 0; i < Math.max(totalPages, cache.totalPages); i++) {
+            if (i > 0 && i < Math.max(totalPages, cache.totalPages) - 1 && Math.abs(i - cache.currentPage) > 2) {
+                if (shown > 0) { h += '<span style="color:var(--txt3)">...</span>'; shown = 0; }
+                continue;
+            }
+            shown++;
+            h += '<button class="page-btn' + (i === cache.currentPage ? ' active' : '') + '" data-page="' + i + '">' + (i + 1) + '</button>';
+        }
+        h += '<button class="page-btn" data-page="' + (cache.currentPage + 1) + '"' + (cache.currentPage >= Math.max(totalPages, cache.totalPages) - 1 ? ' disabled' : '') + '><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>';
+        h += '</div>';
+        el.innerHTML = h;
+        el.querySelectorAll('.page-btn').forEach(function(b) {
+            b.addEventListener('click', function() {
+                if (!this.disabled) loadUsers(parseInt(this.dataset.page));
+            });
+        });
+    }
+
+    // ─── Row Buttons ──────────────────────────────────────────────────
+    function wireRowButtons() {
+        document.querySelectorAll('.edit-user').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.getElementById('edit-id').value = this.dataset.id;
+                var card = this.closest('.user-card');
+                if (card) {
+                    document.getElementById('edit-name').value = card.querySelector('.user-card-name').textContent;
+                    document.getElementById('edit-email').value = card.querySelector('.user-card-email').textContent;
+                    var roleText = card.querySelector('.role-badge').textContent.toLowerCase();
+                    var roleMap = {admin:'ADMIN',faculty:'FACULTY',student:'STUDENT'};
+                    document.getElementById('edit-role').value = roleMap[roleText] || 'STUDENT';
+                } else {
+                    var row = this.closest('tr');
+                    document.getElementById('edit-name').value = row.querySelector('.name').textContent;
+                    document.getElementById('edit-email').value = row.querySelector('.email').textContent;
+                    var roleText = row.querySelector('.role-badge').textContent.toLowerCase();
+                    var roleMap = {admin:'ADMIN',faculty:'FACULTY',student:'STUDENT'};
+                    document.getElementById('edit-role').value = roleMap[roleText] || 'STUDENT';
+                }
+                AedModal.open('edit-modal');
+            });
+        });
+        document.querySelectorAll('.delete-user').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                deleteTargetId = this.dataset.id;
+                document.getElementById('delete-user-name').textContent = this.dataset.name;
+                AedModal.open('delete-modal');
+            });
+        });
+    }
+
+    // ─── Role Chip Filter ──────────────────────────────────────────────
+    var chips = document.querySelectorAll('.chips .chip');
+    chips.forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            chips.forEach(function(c) { c.classList.remove('active'); });
+            this.classList.add('active');
+            cache.roleFilter = this.textContent.toUpperCase();
+            triggerFilter();
+        });
+    });
+
+    // ─── Search (debounced) ─────────────────────────────────────────────
+    var searchInput = document.querySelector('.filter input');
+    var searchTimer = null;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function() {
+            cache.searchQuery = searchInput.value;
+            triggerFilter();
+        }, 250);
+    });
+
+    // ─── Refresh Button ─────────────────────────────────────────────────
+    var refreshBtn = document.createElement('button');
+    refreshBtn.className = 'btn-icon';
+    refreshBtn.title = 'Refresh (re-fetches all pages)';
+    refreshBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
+    refreshBtn.style.marginLeft = 'auto';
+    var cardHdr = document.querySelector('.card-hdr');
+    if (cardHdr) cardHdr.appendChild(refreshBtn);
+    refreshBtn.addEventListener('click', function() {
+        cache.allUsers = [];
+        cache.fetchedPages = {};
+        cache.currentPage = 0;
+        loadUsers(0);
+    });
+
+    // ─── Layout Toggle Init ────────────────────────────────────────────
+    setView(currentView);
+    document.querySelectorAll('#layout-tog button').forEach(function(b) {
+        b.addEventListener('click', function() {
+            setView(this.dataset.view);
+        });
+    });
+
+    // ─── Initial Load ───────────────────────────────────────────────────
+    loadUsers(0);
+
+    // ─── Modals ─────────────────────────────────────────────────────────
     AedModal.init('add-modal', { openBtnId: 'add-student-btn' });
     AedModal.init('edit-modal');
     AedModal.init('delete-modal');
+
     var addPw = document.getElementById('add-password');
     var genPw = document.getElementById('gen-pw-btn');
     var addForm = document.getElementById('add-user-form');
@@ -281,67 +601,128 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(function() { if (addName) addName.focus(); }, 300);
     });
     if (genPw) genPw.addEventListener('click', function() { addPw.value = generatePassword(); });
+
+    // ─── Optimistic Create ──────────────────────────────────────────────
     addForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         var btn = addForm.querySelector('.btn-primary');
         var orig = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = 'Creating...';
         var email = document.getElementById('add-email').value.trim();
         var role = document.getElementById('add-role').value;
+        var name = addName.value.trim();
+        btn.disabled = true;
+        btn.textContent = 'Creating...';
+
+        var tempUser = { id: 'temp-' + Date.now(), name: name, email: email, role: role };
+        cache.allUsers.unshift(tempUser);
+        cache.currentPage = 0;
+        renderFromCache();
+
         try {
-            await API.auth.register(addName.value.trim(), email, addPw.value, role);
+            var data = await API.auth.register(name, email, addPw.value, role);
             AedModal.close('add-modal');
-            AppToast.success('User created successfully');
+            AppToast.success('User created');
+            addForm.reset();
+            addPw.value = '';
+            var idx = cache.allUsers.indexOf(tempUser);
+            if (idx >= 0) cache.allUsers[idx] = data.userResponse || tempUser;
+            renderFromCache();
         } catch (err) {
+            var idx2 = cache.allUsers.indexOf(tempUser);
+            if (idx2 >= 0) cache.allUsers.splice(idx2, 1);
+            renderFromCache();
             AppToast.error(err.message);
         } finally {
             btn.disabled = false;
             btn.textContent = orig;
         }
     });
-    // --- Edit Modal ---------------------------------------------------
-    document.querySelectorAll('.edit-user').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var row = this.closest('tr');
-            var editId = document.getElementById('edit-id');
-            var editName = document.getElementById('edit-name');
-            var editEmail = document.getElementById('edit-email');
-            var editRole = document.getElementById('edit-role');
-            editId.value = this.dataset.id;
-            editName.value = row.querySelector('.name').textContent;
-            editEmail.value = row.querySelector('.email').textContent;
-            var roleText = row.querySelector('.role-badge').textContent.toLowerCase();
-            var roleMap = {admin:'ADMIN',faculty:'FACULTY',student:'STUDENT'};
-            editRole.value = roleMap[roleText] || 'STUDENT';
-            AedModal.open('edit-modal');
-        });
-    });
-    document.getElementById('edit-user-form').addEventListener('submit', function(e) {
+
+    // ─── Optimistic Update ──────────────────────────────────────────────
+    document.getElementById('edit-user-form').addEventListener('submit', async function(e) {
         e.preventDefault();
-        console.log('Updated:', {id: document.getElementById('edit-id').value, name: document.getElementById('edit-name').value.trim(), email: document.getElementById('edit-email').value.trim(), role: document.getElementById('edit-role').value});
-        AedModal.close('edit-modal');
+        var btn = this.querySelector('.btn-primary');
+        var orig = btn.textContent;
+        var id = document.getElementById('edit-id').value;
+        var newName = document.getElementById('edit-name').value.trim();
+        var newEmail = document.getElementById('edit-email').value.trim();
+        var newRole = document.getElementById('edit-role').value;
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+
+        var oldUser = null;
+        var found = false;
+        for (var i = 0; i < cache.allUsers.length; i++) {
+            if (String(cache.allUsers[i].id) === String(id)) {
+                oldUser = Object.assign({}, cache.allUsers[i]);
+                cache.allUsers[i].name = newName;
+                cache.allUsers[i].email = newEmail;
+                cache.allUsers[i].role = newRole;
+                found = true;
+                break;
+            }
+        }
+        if (!found) { AppToast.error('User not found in cache'); btn.disabled = false; btn.textContent = orig; return; }
+        renderFromCache();
+
+        try {
+            await API.user.update({ id: id, name: newName, email: newEmail, role: newRole });
+            AedModal.close('edit-modal');
+            AppToast.success('User updated');
+        } catch (err) {
+            for (var j = 0; j < cache.allUsers.length; j++) {
+                if (String(cache.allUsers[j].id) === String(id)) { cache.allUsers[j] = oldUser; break; }
+            }
+            renderFromCache();
+            AppToast.error(err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = orig;
+        }
     });
-    // --- Delete Modal -------------------------------------------------
+
+    // ─── Optimistic Delete ──────────────────────────────────────────────
     var deleteTargetId = null;
-    document.querySelectorAll('.delete-user').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            deleteTargetId = this.dataset.id;
-            document.getElementById('delete-user-name').textContent = this.dataset.name;
-            AedModal.open('delete-modal');
-        });
-    });
-    document.getElementById('delete-confirm-btn').addEventListener('click', function() {
-        console.log('Deleted user ID:', deleteTargetId);
+    document.getElementById('delete-confirm-btn').addEventListener('click', async function() {
+        if (!deleteTargetId) return;
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = 'Deleting...';
+
+        var removedUser = null, removedIdx = -1;
+        for (var i = 0; i < cache.allUsers.length; i++) {
+            if (String(cache.allUsers[i].id) === String(deleteTargetId)) {
+                removedUser = cache.allUsers[i];
+                removedIdx = i;
+                cache.allUsers.splice(i, 1);
+                break;
+            }
+        }
+        renderFromCache();
         AedModal.close('delete-modal');
+
+        try {
+            await API.user.delete(deleteTargetId);
+            AppToast.success('User deleted');
+        } catch (err) {
+            if (removedUser && removedIdx >= 0) cache.allUsers.splice(removedIdx, 0, removedUser);
+            renderFromCache();
+            AppToast.error(err.message);
+        } finally {
+            deleteTargetId = null;
+            btn.disabled = false;
+            btn.textContent = 'Delete';
+        }
     });
-    // --- Password Generator -------------------------------------------
+
     function generatePassword() {
         var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
         var pw = '';
         for (var i = 0; i < 12; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
         return pw;
     }
+
+    } // end AuthGuard.requireAuth()
 });
 </script>
 </body>

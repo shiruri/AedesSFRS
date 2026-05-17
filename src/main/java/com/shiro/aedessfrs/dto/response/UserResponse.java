@@ -1,10 +1,14 @@
 package com.shiro.aedessfrs.dto.response;
 import com.shiro.aedessfrs.model.User;
 
+import java.util.UUID;
+
 public record UserResponse(
-        String username,
+        UUID id,
+        String name,
         String email,
-        User.Role role) {
+        User.Role role
+        ,boolean forcedPasswordChange) {
 
 
 }

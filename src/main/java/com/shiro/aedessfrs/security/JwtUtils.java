@@ -41,9 +41,9 @@ public class JwtUtils {
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
-    public User.Role extractRole(String token) {
+    public String extractRole(String token) {
         Claims claims = extractAllClaims(token);
-        return claims.get("role", User.Role.class);
+        return claims.get("role", String.class);
     }    /**
      * Generate a JWT token for a given UUID object.
      * @param userId the user's UUID

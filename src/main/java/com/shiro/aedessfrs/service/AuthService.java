@@ -1,5 +1,6 @@
 package com.shiro.aedessfrs.service;
 
+import org.springframework.transaction.annotation.Transactional;
 
 import com.shiro.aedessfrs.dto.request.CreateUseRequest;
 import com.shiro.aedessfrs.dto.request.LoginUserRequest;
@@ -35,17 +36,17 @@ public class AuthService {
 
 
     public AuthResponse registerUser (CreateUseRequest createUseRequest) {
-        System.out.println("Register User: "+ createUseRequest.toString());
         if (userRepository.existsByName(createUseRequest.name())) {
             throw new DuplicateUserException("Username is already in use");
         }
         if (userRepository.existsByEmail(createUseRequest.email())) {
             throw new DuplicateUserException("Email is already in use");
         }
+        String password = passwordEncoder.encode(createUseRequest.password());
         User user = User.builder()
                 .name(createUseRequest.name())
                 .email(createUseRequest.email())
-                .password(passwordEncoder.encode(createUseRequest.password()))
+                .password(password)
                 .role(createUseRequest.role())
                 .build();
 
@@ -68,7 +69,7 @@ public class AuthService {
         String token = jwtUtils.generateToken(user.get().getId(), user.get().getRole());
         return new AuthResponse(mapper.toDto(user.get()),token);
     }
-
+    @Transactional(readOnly = true)
     public UserResponse getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 

@@ -22,7 +22,7 @@ public class User {
     @Id
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @UuidGenerator
-    @Column(name = "id", length = 36, updatable = false, nullable = false)
+    @Column(name = "user_id", length = 36, updatable = false, nullable = false)
     private UUID id;
 
     @PrePersist
@@ -48,12 +48,13 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @NotBlank
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role = Role.STUDENT;
 
-    @NotBlank
+    @Column(name = "force_password_change")
+    private boolean forcedPasswordChange;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

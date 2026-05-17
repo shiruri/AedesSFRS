@@ -1,5 +1,6 @@
 package com.shiro.aedessfrs.config;
 
+import com.shiro.aedessfrs.model.User;
 import com.shiro.aedessfrs.security.JwtUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -51,8 +52,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/", "/index.html",
                                 "/css/**", "/js/**", "/images/**", "/fonts/**",
-                                "/*.html", "/*.js", "/*.css", "/*.ico",
-                                "/login/**", "/profile/**",
+                                "/*.html", "/**/*.html", "/*.js", "/**/*.js",
+                                "/*.css", "/**/*.css", "/*.ico",
+                                "/login/**", "/profile/**", "/dashboard/**",
                                 "/listing/**",
                                 "/error/**", "/favicon.ico","/admin/**"
                         ).permitAll()
@@ -131,8 +133,7 @@ public class SecurityConfig {
 
                     if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                         if (jwtUtils.validateToken(token, userId)) {
-                            com.shiro.aedessfrs.model.User.Role role = jwtUtils.extractRole(token);
-
+                            com.shiro.aedessfrs.model.User.Role role = User.Role.valueOf(jwtUtils.extractRole(token));
                             GrantedAuthority authority =
                                     new SimpleGrantedAuthority("ROLE_" + role.name());
 
@@ -154,9 +155,11 @@ public class SecurityConfig {
                         }
                     }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     response.setContentType("application/json");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("{\"error\":\"Token error\",\"status\":401}");
+                    String msg = e.getMessage() != null ? e.getMessage().replace("\"", "'") : "Unknown error";
+                    response.getWriter().write("{\"error\":\"Token error: " + msg + "\",\"status\":401}");
                     return;
                 }
             }

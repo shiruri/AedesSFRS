@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - AEDES</title>
 <script src="../js/toggles.js"></script>
+<script src="../js/api.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -218,6 +219,12 @@
         .sidebar { transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease; }
         .main { transition: margin-left 0.3s ease; }
 
+        /* Page Loader */
+        .dloader{z-index:9999;position:fixed;inset:0;background:var(--bg-primary);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease,visibility .35s ease}
+        .dloader.hidden{opacity:0;visibility:hidden;pointer-events:none}
+        .dloader-spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
         @media (max-width: 1200px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .panels-grid { grid-template-columns: 1fr; }
@@ -244,6 +251,12 @@
         .dloader.hidden{opacity:0;visibility:hidden;pointer-events:none}
         .dloader-spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
+
+        /* Role toggle */
+        .role-tog{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);z-index:200;display:flex;align-items:center;gap:.3rem;background:var(--bg-primary);border:1px solid var(--border);border-radius:100px;padding:.35rem;box-shadow:0 4px 20px rgba(0,0,0,0.12)}
+        .role-tog button{padding:.35rem .7rem;border-radius:100px;font-size:.6875rem;font-weight:600;border:none;background:transparent;color:var(--text-muted);cursor:pointer;transition:all .15s}
+        .role-tog button.active{background:var(--accent);color:var(--bg-primary)}
+        .role-tog button:hover:not(.active){color:var(--text-primary)}
     </style>
 </head>
 <body>
@@ -297,7 +310,11 @@
         </main>
     </div>
 
+    <script src="../js/auth-guard.js"></script>
     <script>
+        // ─── Auth ────────────────────────────────────────────────────────
+        if (AuthGuard.requireAuth()) {
+
         // ─── Theme ────────────────────────────────────────────────────────
         const body = document.body;
         const savedTheme = localStorage.getItem('aedes-theme');
@@ -424,95 +441,49 @@
 
         // ─── Render ─────────────────────────────────────────────────────
         function renderSidebar() {
-            const nav = document.getElementById('sidebar-nav');
-            nav.innerHTML = SIDEBAR_NAV[getRole()].map(section => `
-                <div class="nav-section">
-                    <div class="nav-label">${section.label}</div>
-                    ${section.items.map(item => item.link ? `
-                        <a href="${item.link}" class="nav-item${item.active ? ' active' : ''}">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${item.icon}</svg>
-                            ${item.name}
-                        </a>
-                    ` : `
-                        <button class="nav-item${item.active ? ' active' : ''}">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${item.icon}</svg>
-                            ${item.name}
-                        </button>
-                    `).join('')}
-                </div>
-            `).join('');
+            var nav = document.getElementById('sidebar-nav');
+            var sectionsHtml = SIDEBAR_NAV[getRole()].map(function(section) {
+                var itemsHtml = section.items.map(function(item) {
+                    var activeClass = item.active ? ' active' : '';
+                    if (item.link) {
+                        return '<a href="' + item.link + '" class="nav-item' + activeClass + '"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + item.icon + '</svg>' + item.name + '</a>';
+                    }
+                    return '<button class="nav-item' + activeClass + '"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + item.icon + '</svg>' + item.name + '</button>';
+                }).join('');
+                return '<div class="nav-section"><div class="nav-label">' + section.label + '</div>' + itemsHtml + '</div>';
+            }).join('');
+            nav.innerHTML = sectionsHtml;
         }
 
         function renderContent() {
-            const content = document.getElementById('main-content');
-            const header = PAGE_HEADERS[getRole()];
-            const stats = STATS[getRole()];
-            const actions = QUICK_ACTIONS[getRole()];
-            const resHeaders = RESERVATION_HEADERS[getRole()];
-            const gridClass = 'grid-' + Math.min(actions.length, 4);
-
-            content.innerHTML = `
-                <div class="page-header animate-fade">
-                    <div>
-                        <h1 class="page-title">${header.title}</h1>
-                        <p class="page-subtitle">${header.subtitle}</p>
-                    </div>
-                    <button style="padding:0.625rem 1.25rem;background:var(--accent);color:var(--bg-primary);border:none;border-radius:8px;font-weight:600;font-size:0.875rem;cursor:pointer;display:flex;align-items:center;gap:0.5rem;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        ${header.cta}
-                    </button>
-                </div>
-
-                <div class="stats-grid animate-up d1">
-                    ${stats.map(s => `
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${s.icon}</svg>
-                            </div>
-                            <div class="stat-value">-</div>
-                            <div class="stat-label">${s.label}</div>
-                        </div>
-                    `).join('')}
-                </div>
-
-                <div class="panels-grid">
-                    <div class="panel animate-up d2">
-                        <div class="panel-header">
-                            <h2 class="panel-title">Recent Reservations</h2>
-                            <a href="#" class="panel-link">View All</a>
-                        </div>
-                        <div class="panel-body">
-                            <table class="table">
-                                <thead><tr>${resHeaders.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="panel animate-up d3">
-                        <div class="panel-header">
-                            <h2 class="panel-title">Activity</h2>
-                        </div>
-                        <div class="panel-body">
-                            <div class="empty-state" style="padding:2rem 1.5rem;text-align:center;">
-                                <p style="color:var(--text-muted);font-size:0.875rem;line-height:1.6;">
-                                    No recent activity
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <h2 style="font-size:1rem;font-weight:600;margin-bottom:1rem;" class="animate-up d3">Quick Actions</h2>
-                <div class="quick-actions ${gridClass} animate-up d4">
-                    ${actions.map(a => `
-                        <div class="quick-action">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${a.icon}</svg>
-                            <div class="quick-action-title">${a.label}</div>
-                            <div class="quick-action-sub">${a.sub}</div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
+            var c = document.getElementById('main-content');
+            var h = PAGE_HEADERS[getRole()];
+            var s = STATS[getRole()];
+            var a = QUICK_ACTIONS[getRole()];
+            var r = RESERVATION_HEADERS[getRole()];
+            var gc = 'grid-' + Math.min(a.length, 4);
+            var statsHtml = s.map(function(x) {
+                return '<div class="stat-card"><div class="stat-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + x.icon + '</svg></div><div class="stat-value" data-stat="' + x.label + '">-</div><div class="stat-label">' + x.label + '</div></div>';
+            }).join('');
+            var resHeaders = r.map(function(x) { return '<th>' + x + '</th>'; }).join('');
+            var actionsHtml = a.map(function(x) {
+                return '<div class="quick-action"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + x.icon + '</svg><div class="quick-action-title">' + x.label + '</div><div class="quick-action-sub">' + x.sub + '</div></div>';
+            }).join('');
+            c.innerHTML = 
+                '<div class="page-header animate-fade">' +
+                    '<div><h1 class="page-title">' + h.title + '</h1><p class="page-subtitle">' + h.subtitle + '</p></div>' +
+                    '<button style="padding:0.625rem 1.25rem;background:var(--accent);color:var(--bg-primary);border:none;border-radius:8px;font-weight:600;font-size:0.875rem;cursor:pointer;display:flex;align-items:center;gap:0.5rem;">' +
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
+                        h.cta +
+                    '</button>' +
+                '</div>' +
+                '<div class="stats-grid animate-up d1">' + statsHtml + '</div>' +
+                '<div class="panels-grid">' +
+                    '<div class="panel animate-up d2"><div class="panel-header"><h2 class="panel-title">Recent Reservations</h2><a href="#" class="panel-link">View All</a></div><div class="panel-body"><table class="table"><thead><tr>' + resHeaders + '</tr></thead><tbody id="reservations-tbody"></tbody></table></div></div>' +
+                    '<div class="panel animate-up d3"><div class="panel-header"><h2 class="panel-title">Activity</h2></div><div class="panel-body"><div class="empty-state" style="padding:2rem 1.5rem;text-align:center;"><p style="color:var(--text-muted);font-size:0.875rem;">No recent activity</p></div></div></div>' +
+                '</div>' +
+                '<h2 style="font-size:1rem;font-weight:600;margin-bottom:1rem;" class="animate-up d3">Quick Actions</h2>' +
+                '<div class="quick-actions ' + gc + ' animate-up d4">' + actionsHtml + '</div>';
         }
 
         function renderUser() {
@@ -530,9 +501,40 @@
             document.getElementById('header-avatar').textContent = initial;
         }
 
+        async function loadDashboardData() {
+            var role = getRole();
+            if (role !== 'ADMIN') return;
+
+            try {
+                var results = await Promise.allSettled([
+                    API.user.list(0, 1),
+                    apiRequest('/api/campus', { method: 'GET' })
+                ]);
+
+                var userCount = results[0].status === 'fulfilled' ? results[0].value.totalElements || 0 : 0;
+                var campusData = results[1].status === 'fulfilled' ? results[1].value : [];
+                var campusCount = Array.isArray(campusData) ? campusData.length : 0;
+
+                var statValues = document.querySelectorAll('.stat-value');
+                statValues.forEach(function(el) {
+                    var label = el.dataset.stat;
+                    if (label === 'Users') el.textContent = userCount;
+                    else if (label === 'Campuses') el.textContent = campusCount;
+                });
+
+                var tbody = document.getElementById('reservations-tbody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="padding:2rem;text-align:center;color:var(--text-muted);font-size:0.875rem;">No reservations yet</td></tr>';
+                }
+            } catch (err) {
+                console.error('[Dashboard] Failed to load data:', err);
+            }
+        }
+
         renderSidebar();
         renderContent();
         renderUser();
+        loadDashboardData();
 
         // ─── Sidebar Collapse ──────────────────────────────────────────
         const collapseToggle = document.getElementById('collapse-toggle');
@@ -554,6 +556,8 @@
             localStorage.removeItem('aedes_user');
             window.location.href = '../index.html';
         });
+
+        } // end AuthGuard.requireAuth()
 
     </script>
 </body>
